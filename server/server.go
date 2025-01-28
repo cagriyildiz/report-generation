@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"report-generation/config"
+	"report-generation/db/store"
 	"sync"
 	"time"
 )
@@ -14,18 +15,21 @@ import (
 type Server struct {
 	cfg    *config.Config
 	logger *slog.Logger
+	store  *store.Store
 }
 
-func New(cfg *config.Config, logger *slog.Logger) *Server {
+func New(cfg *config.Config, logger *slog.Logger, store *store.Store) *Server {
 	return &Server{
 		cfg:    cfg,
 		logger: logger,
+		store:  store,
 	}
 }
 
 func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/ping", s.ping)
+	mux.HandleFunc("GET /ping", s.ping)
+	mux.HandleFunc("POST /auth/signup", s.signupHandler)
 
 	middleware := NewLoggerMiddleware(s.logger)
 

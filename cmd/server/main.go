@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"report-generation/config"
+	"report-generation/db/store"
 	"report-generation/server"
 )
 
@@ -29,7 +30,12 @@ func run(ctx context.Context) error {
 	logger := slog.New(
 		slog.NewJSONHandler(os.Stdout, nil),
 	)
-	srv := server.New(cfg, logger)
+	db, err := store.NewPostgresDB(cfg)
+	if err != nil {
+		return err
+	}
+	dataStore := store.New(db)
+	srv := server.New(cfg, logger, dataStore)
 	if err := srv.Start(ctx); err != nil {
 		return err
 	}
