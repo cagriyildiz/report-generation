@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+
+  db:
+    container_name: postgres-db-17
+    env_file: .env
+    image: postgres:17-alpine
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    ports:
+      - ${DB_PORT}:5432
