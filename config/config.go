@@ -14,6 +14,7 @@ type Config struct {
 	DBPass     string `env:"DB_PASS" envDefault:"secret"`
 	DBPort     string `env:"DB_PORT" envDefault:"5432"`
 	DBUrl      string `env:"DB_URL" envDefault:"postgresql://root:secret@127.0.0.1:5432/report-generation?sslmode=disable"`
+	JWTSecret  string `env:"JWT_SECRET" envDefault:"secret"`
 }
 
 func New() (*Config, error) {
