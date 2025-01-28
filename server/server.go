@@ -26,9 +26,12 @@ func New(cfg *config.Config, logger *slog.Logger) *Server {
 func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ping", s.ping)
+
+	middleware := NewLoggerMiddleware(s.logger)
+
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort(s.cfg.ServerHost, s.cfg.ServerPort),
-		Handler: mux,
+		Handler: middleware(mux),
 	}
 
 	go func() {
