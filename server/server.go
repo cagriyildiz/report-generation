@@ -13,16 +13,23 @@ import (
 )
 
 type Server struct {
-	cfg    *config.Config
-	logger *slog.Logger
-	store  *store.Store
+	cfg        *config.Config
+	logger     *slog.Logger
+	store      *store.Store
+	jwtManager *JwtManager
 }
 
-func New(cfg *config.Config, logger *slog.Logger, store *store.Store) *Server {
+func New(
+	cfg *config.Config,
+	logger *slog.Logger,
+	store *store.Store,
+	jwtManager *JwtManager,
+) *Server {
 	return &Server{
-		cfg:    cfg,
-		logger: logger,
-		store:  store,
+		cfg:        cfg,
+		logger:     logger,
+		store:      store,
+		jwtManager: jwtManager,
 	}
 }
 
@@ -30,6 +37,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /ping", s.ping)
 	mux.HandleFunc("POST /auth/signup", s.signupHandler)
+	mux.HandleFunc("POST /auth/signin", s.signinHandler)
 
 	middleware := NewLoggerMiddleware(s.logger)
 

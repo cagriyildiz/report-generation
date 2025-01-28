@@ -35,7 +35,8 @@ func run(ctx context.Context) error {
 		return err
 	}
 	dataStore := store.New(db)
-	srv := server.New(cfg, logger, dataStore)
+	jwtManager := server.NewJwtManager(cfg)
+	srv := server.New(cfg, logger, dataStore, jwtManager)
 	if err := srv.Start(ctx); err != nil {
 		return err
 	}

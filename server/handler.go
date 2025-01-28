@@ -67,3 +67,73 @@ func (s *Server) signupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+type SigninRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func (r SigninRequest) Validate() error {
+	if r.Email == "" {
+		return errors.New("email is required")
+	}
+	if r.Password == "" {
+		return errors.New("password is required")
+	}
+	return nil
+}
+
+type SigninResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+func (s *Server) signinHandler(w http.ResponseWriter, r *http.Request) {
+	var req SigninRequest
+	OneMb := int64(1048576)
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, OneMb)).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	if err := req.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	user, err := s.store.Users.FindUserByEmail(r.Context(), req.Email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := user.ComparePassword(req.Password); err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	tokenPair, err := s.jwtManager.CreateTokenPair(user.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).
+		Encode(ApiResponse[SigninResponse]{
+			Data: &SigninResponse{
+				AccessToken:  tokenPair.AccessToken,
+				RefreshToken: tokenPair.RefreshToken,
+			},
+		}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
