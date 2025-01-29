@@ -123,13 +123,25 @@ func (s *Server) signinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = s.store.RefreshTokenStore.DeleteUserTokens(r.Context(), user.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = s.store.RefreshTokenStore.Create(r.Context(), tokenPair.RefreshToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).
 		Encode(ApiResponse[SigninResponse]{
 			Data: &SigninResponse{
-				AccessToken:  tokenPair.AccessToken,
-				RefreshToken: tokenPair.RefreshToken,
+				AccessToken:  tokenPair.AccessToken.Raw,
+				RefreshToken: tokenPair.RefreshToken.Raw,
 			},
 		}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

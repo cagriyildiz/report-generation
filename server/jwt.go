@@ -19,8 +19,8 @@ func NewJwtManager(cfg *config.Config) *JwtManager {
 }
 
 type TokenPair struct {
-	AccessToken  string
-	RefreshToken string
+	AccessToken  *jwt.Token
+	RefreshToken *jwt.Token
 }
 
 type CustomClaims struct {
@@ -70,7 +70,7 @@ func (m *JwtManager) IsAccessToken(token *jwt.Token) bool {
 	return false
 }
 
-func (m *JwtManager) createToken(userId uuid.UUID, tokenType string) (string, error) {
+func (m *JwtManager) createToken(userId uuid.UUID, tokenType string) (*jwt.Token, error) {
 	var expiration = time.Minute * 15
 	if tokenType == "refresh" {
 		expiration = time.Hour * 24
@@ -88,5 +88,9 @@ func (m *JwtManager) createToken(userId uuid.UUID, tokenType string) (string, er
 		},
 	)
 	key := []byte(m.cfg.JWTSecret)
-	return jwtToken.SignedString(key)
+	signed, err := jwtToken.SignedString(key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign token: %v", err)
+	}
+	return m.ParseToken(signed)
 }
