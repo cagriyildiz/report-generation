@@ -46,8 +46,10 @@ func (m *JwtManager) CreateTokenPair(userId uuid.UUID) (*TokenPair, error) {
 }
 
 func (m *JwtManager) ParseToken(token string) (*jwt.Token, error) {
-	parser := jwt.NewParser()
-	jwtToken, err := parser.Parse(token, func(t *jwt.Token) (interface{}, error) {
+	if token == "" {
+		return nil, fmt.Errorf("token cannot be empty")
+	}
+	jwtToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}

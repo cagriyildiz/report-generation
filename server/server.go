@@ -40,6 +40,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("POST /auth/signin", s.signinHandler)
 
 	middleware := NewLoggerMiddleware(s.logger)
+	middleware = NewAuthMiddleware(s.logger, s.jwtManager, s.store.Users)
 
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort(s.cfg.ServerHost, s.cfg.ServerPort),
