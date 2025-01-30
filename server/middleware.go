@@ -20,6 +20,11 @@ func NewLoggerMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 func NewAuthMiddleware(logger *slog.Logger, jwtManager *JwtManager, userStore *store.UserStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasPrefix(r.RequestURI, "/auth") {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			ctx := r.Context()
 			header := r.Header.Get("Authorization")
 			parts := strings.Split(header, "Bearer ")
