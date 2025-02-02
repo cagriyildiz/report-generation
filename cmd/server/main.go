@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"log/slog"
 	"os"
@@ -51,7 +52,14 @@ func run(ctx context.Context) error {
 		options.BaseEndpoint = aws.String(cfg.LocalstackEndpoint)
 	})
 
-	srv := server.New(cfg, logger, dataStore, jwtManager, sqsClient)
+	s3Client := s3.NewFromConfig(awsConfig, func(options *s3.Options) {
+		options.BaseEndpoint = aws.String(cfg.LocalstackS3Endpoint)
+		options.UsePathStyle = true
+	})
+
+	s3PresignClient := s3.NewPresignClient(s3Client)
+
+	srv := server.New(cfg, logger, dataStore, jwtManager, sqsClient, s3PresignClient)
 	if err := srv.Start(ctx); err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"log/slog"
 	"net"
 	"net/http"
@@ -15,11 +16,12 @@ import (
 )
 
 type Server struct {
-	cfg        *config.Config
-	logger     *slog.Logger
-	store      *store.Store
-	jwtManager *JwtManager
-	sqsClient  *sqs.Client
+	cfg             *config.Config
+	logger          *slog.Logger
+	store           *store.Store
+	jwtManager      *JwtManager
+	sqsClient       *sqs.Client
+	s3PresignClient *s3.PresignClient
 }
 
 func New(
@@ -28,13 +30,15 @@ func New(
 	store *store.Store,
 	jwtManager *JwtManager,
 	sqsClient *sqs.Client,
+	s3PresignClient *s3.PresignClient,
 ) *Server {
 	return &Server{
-		cfg:        cfg,
-		logger:     logger,
-		store:      store,
-		jwtManager: jwtManager,
-		sqsClient:  sqsClient,
+		cfg:             cfg,
+		logger:          logger,
+		store:           store,
+		jwtManager:      jwtManager,
+		sqsClient:       sqsClient,
+		s3PresignClient: s3PresignClient,
 	}
 }
 

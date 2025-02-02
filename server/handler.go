@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/google/uuid"
 	"net/http"
@@ -379,6 +380,28 @@ func (s *Server) getReportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if report.CompletedAt != nil {
+		expiresAt := time.Now().Add(10 * time.Second)
+		object, err := s.s3PresignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+			Bucket: aws.String(s.cfg.AWSS3Bucket),
+			Key:    report.OutputFilePath,
+		}, func(options *s3.PresignOptions) {
+			options.Expires = 10 * time.Second
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		report.DownloadUrl = &object.URL
+		report.DownloadUrlExpiresAt = &expiresAt
+
+		report, err = s.store.ReportsStore.UpdateReport(ctx, report)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
