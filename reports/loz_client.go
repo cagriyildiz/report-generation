@@ -16,7 +16,7 @@ type LozClient struct {
 	httpClient HttpClient
 }
 
-func NewClient(httpClient HttpClient) *LozClient {
+func NewLozClient(httpClient HttpClient) *LozClient {
 	return &LozClient{
 		httpClient: httpClient,
 	}
