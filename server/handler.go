@@ -382,7 +382,8 @@ func (s *Server) getReportHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if report.CompletedAt != nil && report.DownloadUrlExpiresAt != nil && report.DownloadUrlExpiresAt.Before(time.Now()) {
+	needsNewDownloadUrl := report.DownloadUrl == nil || (report.DownloadUrlExpiresAt != nil && report.DownloadUrlExpiresAt.Before(time.Now()))
+	if report.CompletedAt != nil && needsNewDownloadUrl {
 		expiresAt := time.Now().Add(10 * time.Second)
 		object, err := s.s3PresignClient.PresignGetObject(ctx, &s3.GetObjectInput{
 			Bucket: aws.String(s.cfg.AWSS3Bucket),
