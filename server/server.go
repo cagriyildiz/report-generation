@@ -45,6 +45,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("POST /auth/signin", s.signinHandler)
 	mux.HandleFunc("POST /auth/refresh", s.tokenRefreshHandler)
 	mux.HandleFunc("POST /reports", s.createReportHandler)
+	mux.HandleFunc("GET /reports/{id}", s.getReportHandler)
 
 	middleware := NewLoggerMiddleware(s.logger)
 	middleware = NewAuthMiddleware(s.logger, s.jwtManager, s.store.Users)

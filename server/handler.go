@@ -355,3 +355,52 @@ func (s *Server) createReportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func (s *Server) getReportHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	reportIdStr := r.PathValue("id")
+	reportId, err := uuid.Parse(reportIdStr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	user, ok := UserFromContext(ctx)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	report, err := s.store.ReportsStore.GetReportByPrimaryKey(ctx, user.Id, reportId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).
+		Encode(ApiResponse[ApiReport]{
+			Data: &ApiReport{
+				Id:                   report.Id,
+				ReportType:           report.ReportType,
+				OutputFilePath:       report.OutputFilePath,
+				DownloadUrl:          report.DownloadUrl,
+				DownloadUrlExpiresAt: report.DownloadUrlExpiresAt,
+				ErrorMessage:         report.ErrorMessage,
+				CreatedAt:            report.CreatedAt,
+				StartedAt:            report.StartedAt,
+				FailedAt:             report.FailedAt,
+				CompletedAt:          report.CompletedAt,
+				Status:               report.Status(),
+			},
+		}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
