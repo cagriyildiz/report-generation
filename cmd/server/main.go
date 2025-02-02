@@ -3,12 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"log/slog"
 	"os"
 	"os/signal"
 	"report-generation/config"
 	"report-generation/db/store"
 	"report-generation/server"
+
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 )
 
 func main() {
@@ -36,7 +40,18 @@ func run(ctx context.Context) error {
 	}
 	dataStore := store.New(db)
 	jwtManager := server.NewJwtManager(cfg)
-	srv := server.New(cfg, logger, dataStore, jwtManager)
+
+	awsConfig, err := awsconfig.LoadDefaultConfig(ctx)
+	if err != nil {
+		logger.Error("couldn't load default configuration", "error", err)
+		return err
+	}
+
+	sqsClient := sqs.NewFromConfig(awsConfig, func(options *sqs.Options) {
+		options.BaseEndpoint = aws.String(cfg.LocalstackEndpoint)
+	})
+
+	srv := server.New(cfg, logger, dataStore, jwtManager, sqsClient)
 	if err := srv.Start(ctx); err != nil {
 		return err
 	}

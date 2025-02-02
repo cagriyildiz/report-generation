@@ -4,8 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/google/uuid"
 	"net/http"
+	"report-generation/reports"
 	"time"
 )
 
@@ -247,4 +250,108 @@ func (s *Server) tokenRefreshHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+type CreateReportRequest struct {
+	ReportType string `json:"reportType"`
+}
+
+func (r CreateReportRequest) Validate() error {
+	if r.ReportType == "" {
+		return errors.New("reportType is required")
+	}
+	return nil
+}
+
+type ApiReport struct {
+	Id                   uuid.UUID  `json:"id"`
+	ReportType           string     `json:"reportType,omitempty"`
+	OutputFilePath       *string    `json:"outputFilePath,omitempty"`
+	DownloadUrl          *string    `json:"downloadUrl,omitempty"`
+	DownloadUrlExpiresAt *time.Time `json:"downloadUrlExpiresAt,omitempty"`
+	ErrorMessage         *string    `json:"errorMessage,omitempty"`
+	CreatedAt            time.Time  `json:"createdAt,omitempty"`
+	StartedAt            *time.Time `json:"startedAt,omitempty"`
+	FailedAt             *time.Time `json:"failedAt,omitempty"`
+	CompletedAt          *time.Time `json:"completedAt,omitempty"`
+	Status               string     `json:"status,omitempty"`
+}
+
+func (s *Server) createReportHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var req CreateReportRequest
+	OneMb := int64(1048576)
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, OneMb)).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	if err := req.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	user, ok := UserFromContext(ctx)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	report, err := s.store.ReportsStore.CreateReport(ctx, user.Id, req.ReportType)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	sqsMessage := reports.SqsMessage{
+		UserId:   report.UserId,
+		ReportId: report.Id,
+	}
+
+	bytes, err := json.Marshal(sqsMessage)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	queueUrlOutput, err := s.sqsClient.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{
+		QueueName: aws.String(s.cfg.AWSSQSQueue),
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = s.sqsClient.SendMessage(ctx, &sqs.SendMessageInput{
+		MessageBody: aws.String(string(bytes)),
+		QueueUrl:    queueUrlOutput.QueueUrl,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).
+		Encode(ApiResponse[ApiReport]{
+			Data: &ApiReport{
+				Id:                   report.Id,
+				ReportType:           report.ReportType,
+				OutputFilePath:       report.OutputFilePath,
+				DownloadUrl:          report.DownloadUrl,
+				DownloadUrlExpiresAt: report.DownloadUrlExpiresAt,
+				ErrorMessage:         report.ErrorMessage,
+				CreatedAt:            report.CreatedAt,
+				StartedAt:            report.StartedAt,
+				FailedAt:             report.FailedAt,
+				CompletedAt:          report.CompletedAt,
+				Status:               report.Status(),
+			},
+		}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }

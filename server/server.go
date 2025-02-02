@@ -10,6 +10,8 @@ import (
 	"report-generation/db/store"
 	"sync"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 )
 
 type Server struct {
@@ -17,6 +19,7 @@ type Server struct {
 	logger     *slog.Logger
 	store      *store.Store
 	jwtManager *JwtManager
+	sqsClient  *sqs.Client
 }
 
 func New(
@@ -24,12 +27,14 @@ func New(
 	logger *slog.Logger,
 	store *store.Store,
 	jwtManager *JwtManager,
+	sqsClient *sqs.Client,
 ) *Server {
 	return &Server{
 		cfg:        cfg,
 		logger:     logger,
 		store:      store,
 		jwtManager: jwtManager,
+		sqsClient:  sqsClient,
 	}
 }
 
@@ -39,6 +44,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("POST /auth/signup", s.signupHandler)
 	mux.HandleFunc("POST /auth/signin", s.signinHandler)
 	mux.HandleFunc("POST /auth/refresh", s.tokenRefreshHandler)
+	mux.HandleFunc("POST /reports", s.createReportHandler)
 
 	middleware := NewLoggerMiddleware(s.logger)
 	middleware = NewAuthMiddleware(s.logger, s.jwtManager, s.store.Users)
