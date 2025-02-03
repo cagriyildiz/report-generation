@@ -1,11 +1,13 @@
 package server
 
 import (
-	"github.com/google/uuid"
 	"log/slog"
 	"net/http"
-	"report-generation/db/store"
 	"strings"
+
+	"github.com/google/uuid"
+
+	"report-generation/db/store"
 )
 
 func NewLoggerMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {

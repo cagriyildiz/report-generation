@@ -4,13 +4,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/google/uuid"
-	"net/http"
+
 	"report-generation/reports"
-	"time"
 )
 
 type SignupRequest struct {

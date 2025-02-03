@@ -2,11 +2,12 @@ package store
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestRefreshTokenStore(t *testing.T) {

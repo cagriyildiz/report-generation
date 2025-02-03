@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
-	"golang.org/x/crypto/bcrypt"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserStore struct {

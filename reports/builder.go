@@ -6,15 +6,17 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/google/uuid"
 	"log/slog"
-	"report-generation/config"
-	"report-generation/db/store"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/google/uuid"
+
+	"report-generation/config"
+	"report-generation/db/store"
 )
 
 type ReportBuilder struct {

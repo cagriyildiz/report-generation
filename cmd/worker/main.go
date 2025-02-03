@@ -2,19 +2,21 @@ package main
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awsconfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+
 	"report-generation/config"
 	"report-generation/db/store"
 	"report-generation/reports"
-	"time"
 )
 
 func main() {

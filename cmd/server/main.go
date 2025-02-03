@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"log/slog"
 	"os"
 	"os/signal"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+
 	"report-generation/config"
 	"report-generation/db/store"
 	"report-generation/server"

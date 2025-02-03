@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"report-generation/config"
 	"time"
+
+	"report-generation/config"
 
 	_ "github.com/lib/pq"
 )

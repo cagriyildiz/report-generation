@@ -2,10 +2,12 @@ package server
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+
 	"report-generation/config"
-	"testing"
 )
 
 func TestJwtManager(t *testing.T) {

@@ -3,16 +3,17 @@ package server
 import (
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"log/slog"
 	"net"
 	"net/http"
-	"report-generation/config"
-	"report-generation/db/store"
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+
+	"report-generation/config"
+	"report-generation/db/store"
 )
 
 type Server struct {

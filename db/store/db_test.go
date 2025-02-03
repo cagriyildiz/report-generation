@@ -4,13 +4,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/stretchr/testify/require"
+
 	"report-generation/config"
-	"strings"
-	"testing"
 )
 
 type TestDB struct {
