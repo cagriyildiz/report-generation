@@ -17,12 +17,12 @@ func TestJwtManager(t *testing.T) {
 	tokenPair, err := jwtManager.CreateTokenPair(userId)
 	require.NoError(t, err)
 
-	accessToken, err := jwtManager.ParseToken(tokenPair.AccessToken)
+	accessToken, err := jwtManager.ParseToken(tokenPair.AccessToken.Raw)
 	require.NoError(t, err)
 
 	require.True(t, jwtManager.IsAccessToken(accessToken))
 
-	require.Equal(t, tokenPair.AccessToken, accessToken.Raw)
+	require.Equal(t, tokenPair.AccessToken.Raw, accessToken.Raw)
 
 	accessTokenSubject, err := accessToken.Claims.GetSubject()
 	require.NoError(t, err)
@@ -34,12 +34,12 @@ func TestJwtManager(t *testing.T) {
 
 	// ---
 
-	refreshToken, err := jwtManager.ParseToken(tokenPair.RefreshToken)
+	refreshToken, err := jwtManager.ParseToken(tokenPair.RefreshToken.Raw)
 	require.NoError(t, err)
 
 	require.False(t, jwtManager.IsAccessToken(refreshToken))
 
-	require.Equal(t, tokenPair.RefreshToken, refreshToken.Raw)
+	require.Equal(t, tokenPair.RefreshToken.Raw, refreshToken.Raw)
 
 	refreshTokenSubject, err := refreshToken.Claims.GetSubject()
 	require.NoError(t, err)
